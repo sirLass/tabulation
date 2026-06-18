@@ -16,6 +16,12 @@ export default function UserCategory() {
       link: "/user-category/pageant",
       badge: "Public Access",
     },
+    {
+      title: "Judge",
+      description: "Access your assigned judging panel, evaluate candidates, and submit scores securely using your unique access code.",
+      link: "/judge/auth",
+      badge: "Judging Panel",
+    },
   ];
 
   return (
@@ -45,7 +51,7 @@ export default function UserCategory() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-5xl mx-auto">
           {categories.map((cat, idx) => (
             <a
               key={idx}
@@ -76,6 +82,28 @@ export default function UserCategory() {
           ))}
         </div>
       </div>
+
+      {/* Back to Homepage */}
+      <a
+        href="/"
+        className="relative z-10 inline-flex items-center gap-2 mt-12 font-body text-sm font-semibold uppercase tracking-[0.12em] border border-gold text-gold px-8 py-3 hover:text-white hover:bg-gold/10 transition-all duration-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5M12 5l-7 7 7 7" />
+        </svg>
+        Back to Homepage
+      </a>
 
       {/* Footer copyright note */}
       <p className="relative z-10 font-body text-[10px] text-gold-shimmer/30 uppercase tracking-widest mt-16">

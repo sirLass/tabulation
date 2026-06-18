@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PageantController;
 use App\Http\Controllers\CandidateController;
+use App\Http\Controllers\JudgeController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/judges/login', [JudgeController::class, 'login']);
 Route::get('/pageants/public', [PageantController::class, 'publicIndex']);
 Route::get('/pageants/{pageant}', [PageantController::class, 'show']);
 
@@ -19,6 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/candidates', [CandidateController::class, 'store']);
     Route::post('/pageants/{pageant}/candidates', [CandidateController::class, 'attachToPageant']);
     Route::get('/pageants/{pageant}/candidates', [CandidateController::class, 'pageantCandidates']);
+
+    Route::get('/judges', [JudgeController::class, 'index']);
+    Route::post('/judges', [JudgeController::class, 'store']);
 });
 
 // Route::get('/user', function (Request $request) {

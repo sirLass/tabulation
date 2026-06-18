@@ -776,18 +776,156 @@ function CandidatesSection() {
 
 /* ─────────────────────────────── Judge ─────────────────────────────── */
 
+interface Judge {
+    id: number;
+    name: string;
+    judge_code: string;
+    created_at: string;
+}
+
 function JudgeSection() {
+    const { toast } = useToast();
+    const [judges, setJudges] = useState<Judge[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [result, setResult] = useState<{ name: string; code: string } | null>(null);
+    const [name, setName] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const fetchJudges = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch("http://localhost:8000/api/judges", { headers: { Authorization: `Bearer ${token}` } });
+            if (res.ok) setJudges(await res.json());
+        } catch { /* ignore */ } finally { setLoading(false); }
+    };
+
+    useEffect(() => { fetchJudges(); }, []);
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch("http://localhost:8000/api/judges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ name }),
+            });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.message || "Failed to create judge"); }
+            const data = await res.json();
+            setResult(data.judge);
+            setName("");
+            await fetchJudges();
+        } catch (err: unknown) {
+            toast(err instanceof Error ? err.message : "Something went wrong", "error");
+        } finally { setSubmitting(false); }
+    };
+
+    const closeResult = () => setResult(null);
+
     return (
-        <div className="max-w-5xl space-y-5">
-            <div className="flex items-center justify-end">
-                <button className="flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
-                    <SvgIcon d="M12 4v16m8-8H4" className="w-3.5 h-3.5" /> Assign Judge
-                </button>
+        <>
+            <div className="max-w-5xl space-y-5">
+                <div className="flex items-center justify-end">
+                    <button onClick={() => setShowModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
+                        <SvgIcon d="M12 4v16m8-8H4" className="w-3.5 h-3.5" /> Assign Judge
+                    </button>
+                </div>
+                {loading ? (
+                    <div className="rounded-xl border border-white/[0.06] p-6 space-y-4" style={{ background: '#13111f' }}>
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="flex items-center gap-4 animate-pulse">
+                                <div className="h-4 bg-white/10 rounded w-1/3" />
+                                <div className="h-4 bg-white/10 rounded w-1/4" />
+                            </div>
+                        ))}
+                    </div>
+                ) : judges.length === 0 ? (
+                    <div className="rounded-xl border border-white/[0.06] p-10 text-center" style={{ background: '#13111f' }}>
+                        <SvgIcon d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" className="w-8 h-8 text-cream-warm/10 mx-auto mb-3" />
+                        <p className="text-sm text-cream-warm/30">No judges assigned yet.</p>
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-white/[0.06] overflow-hidden" style={{ background: '#13111f' }}>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-white/[0.06] text-left text-cream-warm/30 text-[10px] uppercase tracking-wider">
+                                    <th className="px-5 py-3 font-semibold">Name</th>
+                                    <th className="px-5 py-3 font-semibold">Account Code</th>
+                                    <th className="px-5 py-3 font-semibold">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/[0.04]">
+                                {judges.map((j) => (
+                                    <tr key={j.id} className="hover:bg-white/[0.02] transition">
+                                        <td className="px-5 py-3.5 text-cream-warm font-medium">{j.name}</td>
+                                        <td className="px-5 py-3.5">
+                                            <span className="font-mono text-xs tracking-wider text-gold bg-gold/10 px-2.5 py-1 rounded-md border border-gold/20 select-all">{j.judge_code}</span>
+                                        </td>
+                                        <td className="px-5 py-3.5 text-cream-warm/40">{new Date(j.created_at).toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
-            <div className="rounded-xl border border-white/[0.06] p-10 text-center" style={{ background: '#13111f' }}>
-                <SvgIcon d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" className="w-8 h-8 text-cream-warm/10 mx-auto mb-3" />
-                <p className="text-sm text-cream-warm/30">No judges assigned yet.</p>
-            </div>
-        </div>
+
+            {/* Create Judge Modal */}
+            {showModal && !result && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl" style={{ background: '#100e1a' }}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-display text-xl font-bold text-cream-warm">Assign Judge</h3>
+                            <button onClick={() => setShowModal(false)} className="text-cream-warm/30 hover:text-cream-warm text-lg transition">✕</button>
+                        </div>
+                        <form onSubmit={handleCreate} className="space-y-4">
+                            <div>
+                                <label className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 block mb-1.5 font-semibold">Full Name of Judge</label>
+                                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe"
+                                    className="w-full bg-[#0d0b14] border border-white/[0.08] text-cream-warm px-4 py-2.5 rounded-md focus:outline-none focus:border-gold/50 text-sm placeholder-cream-warm/20" required />
+                            </div>
+                            <button type="submit" disabled={submitting}
+                                className="w-full mt-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition disabled:opacity-50">
+                                {submitting ? "Generating..." : "Generate Code"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Generated Code Result */}
+            {result && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl text-center" style={{ background: '#100e1a' }}>
+                        <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+                            <SvgIcon d="M5 13l4 4L19 7" className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <h3 className="font-display text-xl font-bold text-cream-warm mb-1">Judge Created</h3>
+                        <p className="text-sm text-cream-warm/50 mb-6">
+                            Share this code with <span className="text-cream-warm font-semibold">{result.name}</span>
+                        </p>
+                        <div className="bg-[#0d0b14] border border-white/[0.08] rounded-lg px-5 py-4 mb-6">
+                            <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/30 mb-2 font-semibold">Login Code</p>
+                            <button
+                                onClick={() => { navigator.clipboard.writeText(result.code); toast("Code copied!"); }}
+                                className="w-full group relative flex items-center justify-center gap-3"
+                            >
+                                <span className="font-mono text-xl tracking-widest text-gold font-bold">{result.code}</span>
+                                <span className="text-[10px] text-cream-warm/30 group-hover:text-cream-warm/60 transition shrink-0">
+                                    <SvgIcon d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" className="w-4 h-4" />
+                                </span>
+                            </button>
+                        </div>
+                        <button onClick={() => { setShowModal(false); setResult(null); }}
+                            className="w-full px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
