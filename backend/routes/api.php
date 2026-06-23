@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/judges', [JudgeController::class, 'index']);
     Route::post('/judges', [JudgeController::class, 'store']);
+    Route::delete('/judges/{judge}', [JudgeController::class, 'destroy']);
 });
 
 // Route::get('/user', function (Request $request) {

@@ -406,23 +406,7 @@ function PageantsSection({ user }: { user: User }) {
                     </button>
                 </div>
 
-                {loading ? (
-                    <div className="rounded-xl border border-white/[0.06] p-6 space-y-4" style={{ background: '#13111f' }}>
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-4 animate-pulse">
-                                <div className="h-4 bg-white/10 rounded w-1/4" />
-                                <div className="h-4 bg-white/10 rounded w-1/5" />
-                                <div className="h-4 bg-white/10 rounded w-1/6" />
-                                <div className="h-4 bg-white/10 rounded w-12 ml-auto" />
-                            </div>
-                        ))}
-                    </div>
-                ) : pageants.length === 0 ? (
-                    <div className="rounded-xl border border-white/[0.06] p-10 text-center" style={{ background: '#13111f' }}>
-                        <SvgIcon d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" className="w-8 h-8 text-cream-warm/10 mx-auto mb-3" />
-                        <p className="text-sm text-cream-warm/30">No pageants yet. Create your first one to get started.</p>
-                    </div>
-                ) : (
+                {loading || pageants.length > 0 ? (
                     <div className="rounded-xl border border-white/[0.06] overflow-hidden" style={{ background: '#13111f' }}>
                         <table className="w-full text-sm">
                             <thead>
@@ -435,32 +419,44 @@ function PageantsSection({ user }: { user: User }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/[0.04]">
-                                {pageants.map((p) => {
-                                    const days = Math.max(0, Math.ceil((new Date(p.date).getTime() - Date.now()) / 86400000));
-                                    return (
-                                        <tr key={p.id} className="hover:bg-white/[0.02] transition">
-                                            <td className="px-5 py-3.5 text-cream-warm font-medium">{p.name}</td>
-                                            <td className="px-5 py-3.5 text-cream-warm/50">{p.city}, {p.province}</td>
-                                            <td className="px-5 py-3.5 text-cream-warm/50">
-                                                {new Date(p.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                                            </td>
-                                            <td className="px-5 py-3.5">
-                                                <span className="text-gold text-xs font-semibold">
-                                                    {days === 0 ? "Today!" : `${days}d`}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-3.5 text-right">
-                                                <button onClick={() => setViewing(p)}
-                                                    className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-gold/25 text-gold rounded-md hover:bg-gold/10 transition">
-                                                    View
-                                                </button>
-                                            </td>
+                                {loading ? (
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-5 py-3.5"><div className="h-4 bg-white/10 rounded w-3/4" /></td>
+                                            <td className="px-5 py-3.5"><div className="h-4 bg-white/10 rounded w-1/2" /></td>
+                                            <td className="px-5 py-3.5"><div className="h-4 bg-white/10 rounded w-1/3" /></td>
+                                            <td className="px-5 py-3.5"><div className="h-4 bg-white/10 rounded w-12" /></td>
+                                            <td className="px-5 py-3.5"><div className="h-4 bg-white/10 rounded w-16 ml-auto" /></td>
                                         </tr>
-                                    );
-                                })}
+                                    ))
+                                ) : (
+                                    pageants.map((p) => {
+                                        const days = Math.max(0, Math.ceil((new Date(p.date).getTime() - Date.now()) / 86400000));
+                                        return (
+                                            <tr key={p.id} className="hover:bg-white/[0.02] transition">
+                                                <td className="px-5 py-3.5 text-cream-warm font-medium">{p.name}</td>
+                                                <td className="px-5 py-3.5 text-cream-warm/50">{p.city}, {p.province}</td>
+                                                <td className="px-5 py-3.5 text-cream-warm/50">
+                                                    {new Date(p.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <span className="text-gold text-xs font-semibold">
+                                                        {days === 0 ? "Today!" : `${days}d`}
+                                                    </span>
+                                                </td>
+                                                <td className="px-5 py-3.5 text-right">
+                                                    <button onClick={() => setViewing(p)}
+                                                        className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-gold/25 text-gold rounded-md hover:bg-gold/10 transition">
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
-                        {lastPage > 1 && (
+                        {!loading && lastPage > 1 && (
                             <div className="flex items-center justify-center gap-2 px-5 py-4 border-t border-white/[0.06]">
                                 <button onClick={() => fetchPageants(page - 1)} disabled={page <= 1}
                                     className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border border-white/[0.1] text-cream-warm/40 rounded-md hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition">
@@ -478,6 +474,11 @@ function PageantsSection({ user }: { user: User }) {
                                 </button>
                             </div>
                         )}
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-white/[0.06] p-10 text-center" style={{ background: '#13111f' }}>
+                        <SvgIcon d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" className="w-8 h-8 text-cream-warm/10 mx-auto mb-3" />
+                        <p className="text-sm text-cream-warm/30">No pageants yet. Create your first one to get started.</p>
                     </div>
                 )}
             </div>
@@ -781,16 +782,21 @@ interface Judge {
     name: string;
     judge_code: string;
     created_at: string;
+    pageants: { id: number; name: string }[];
 }
 
 function JudgeSection() {
     const { toast } = useToast();
     const [judges, setJudges] = useState<Judge[]>([]);
+    const [pageants, setPageants] = useState<Pageant[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [result, setResult] = useState<{ name: string; code: string } | null>(null);
     const [name, setName] = useState("");
+    const [selectedPageants, setSelectedPageants] = useState<number[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [viewingJudge, setViewingJudge] = useState<Judge | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<Judge | null>(null);
 
     const fetchJudges = async () => {
         const token = localStorage.getItem("token");
@@ -800,26 +806,62 @@ function JudgeSection() {
         } catch { /* ignore */ } finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchJudges(); }, []);
+    const fetchPageants = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch("http://localhost:8000/api/pageants", { headers: { Authorization: `Bearer ${token}` } });
+            if (res.ok) {
+                const data = await res.json();
+                setPageants(data.data ?? data);
+            }
+        } catch { /* ignore */ }
+    };
+
+    useEffect(() => { fetchJudges(); fetchPageants(); }, []);
+
+    const togglePageant = (id: number) => {
+        setSelectedPageants((prev) =>
+            prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+        );
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (selectedPageants.length === 0) {
+            toast("Please select at least one pageant.", "error");
+            return;
+        }
         setSubmitting(true);
         const token = localStorage.getItem("token");
         try {
             const res = await fetch("http://localhost:8000/api/judges", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name, pageant_ids: selectedPageants }),
             });
             if (!res.ok) { const d = await res.json(); throw new Error(d.message || "Failed to create judge"); }
             const data = await res.json();
             setResult(data.judge);
             setName("");
+            setSelectedPageants([]);
             await fetchJudges();
         } catch (err: unknown) {
             toast(err instanceof Error ? err.message : "Something went wrong", "error");
         } finally { setSubmitting(false); }
+    };
+
+    const handleRemove = async (judge: Judge) => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`http://localhost:8000/api/judges/${judge.id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Failed to remove judge");
+            toast("Judge removed successfully!");
+            setConfirmDelete(null);
+            await fetchJudges();
+        } catch { toast("Something went wrong", "error"); }
     };
 
     const closeResult = () => setResult(null);
@@ -855,6 +897,7 @@ function JudgeSection() {
                                     <th className="px-5 py-3 font-semibold">Name</th>
                                     <th className="px-5 py-3 font-semibold">Account Code</th>
                                     <th className="px-5 py-3 font-semibold">Created</th>
+                                    <th className="px-5 py-3 font-semibold text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/[0.04]">
@@ -865,6 +908,18 @@ function JudgeSection() {
                                             <span className="font-mono text-xs tracking-wider text-gold bg-gold/10 px-2.5 py-1 rounded-md border border-gold/20 select-all">{j.judge_code}</span>
                                         </td>
                                         <td className="px-5 py-3.5 text-cream-warm/40">{new Date(j.created_at).toLocaleDateString()}</td>
+                                        <td className="px-5 py-3.5 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <button onClick={() => setViewingJudge(j)}
+                                                    className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-gold/25 text-gold rounded-md hover:bg-gold/10 transition">
+                                                    View
+                                                </button>
+                                                <button onClick={() => setConfirmDelete(j)}
+                                                    className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-red-400/25 text-red-400 rounded-md hover:bg-red-400/10 transition">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -887,7 +942,28 @@ function JudgeSection() {
                                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe"
                                     className="w-full bg-[#0d0b14] border border-white/[0.08] text-cream-warm px-4 py-2.5 rounded-md focus:outline-none focus:border-gold/50 text-sm placeholder-cream-warm/20" required />
                             </div>
-                            <button type="submit" disabled={submitting}
+                            <div>
+                                <label className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 block mb-1.5 font-semibold">Assign to Pageants</label>
+                                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                                    {pageants.length === 0 ? (
+                                        <p className="text-sm text-cream-warm/30">No pageants available.</p>
+                                    ) : (
+                                        pageants.map((p) => (
+                                            <label key={p.id}
+                                                className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition text-sm ${selectedPageants.includes(p.id) ? 'bg-gold/10 border border-gold/25' : 'bg-white/[0.03] border border-transparent hover:bg-white/[0.06]'}`}>
+                                                <input type="checkbox" checked={selectedPageants.includes(p.id)}
+                                                    onChange={() => togglePageant(p.id)}
+                                                    className="accent-gold w-4 h-4" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-cream-warm font-medium truncate">{p.name}</p>
+                                                    <p className="text-cream-warm/30 text-[10px]">{p.city}, {p.province} &middot; {new Date(p.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                                                </div>
+                                            </label>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                            <button type="submit" disabled={submitting || pageants.length === 0}
                                 className="w-full mt-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition disabled:opacity-50">
                                 {submitting ? "Generating..." : "Generate Code"}
                             </button>
@@ -923,6 +999,71 @@ function JudgeSection() {
                             className="w-full px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
                             Done
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* View Judge Modal */}
+            {viewingJudge && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl" style={{ background: '#100e1a' }}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-display text-xl font-bold text-cream-warm">Judge Details</h3>
+                            <button onClick={() => setViewingJudge(null)} className="text-cream-warm/30 hover:text-cream-warm text-lg transition">✕</button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1 font-semibold">Name</p>
+                                <p className="text-cream-warm font-medium">{viewingJudge.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1 font-semibold">Access Code</p>
+                                <span className="font-mono text-sm tracking-wider text-gold bg-gold/10 px-2.5 py-1 rounded-md border border-gold/20 select-all">{viewingJudge.judge_code}</span>
+                            </div>
+                            <div>
+                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1.5 font-semibold">Assigned Pageants</p>
+                                {viewingJudge.pageants.length === 0 ? (
+                                    <p className="text-sm text-cream-warm/30">No pageants assigned.</p>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        {viewingJudge.pageants.map((p) => (
+                                            <div key={p.id} className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] rounded-md">
+                                                <SvgIcon d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" className="w-3 h-3 text-gold shrink-0" />
+                                                <span className="text-sm text-cream-warm">{p.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-cream-warm/20">
+                                Created {new Date(viewingJudge.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Remove Modal */}
+            {confirmDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-sm w-full shadow-2xl text-center" style={{ background: '#100e1a' }}>
+                        <div className="w-14 h-14 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
+                            <SvgIcon d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-6 h-6 text-red-400" />
+                        </div>
+                        <h3 className="font-display text-xl font-bold text-cream-warm mb-2">Remove Judge</h3>
+                        <p className="text-sm text-cream-warm/50 mb-6">
+                            Are you sure you want to remove <span className="text-cream-warm font-semibold">{confirmDelete.name}</span>? This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmDelete(null)}
+                                className="flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider border border-white/[0.1] text-cream-warm/40 rounded-md hover:bg-white/5 transition">
+                                Cancel
+                            </button>
+                            <button onClick={() => handleRemove(confirmDelete)}
+                                className="flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+                                Remove
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -71,15 +71,26 @@ export default function JudgeLoginPage() {
 
     setStatus("loading");
 
-    // Simulate async validation — replace with your real auth call
-    await new Promise((r) => setTimeout(r, 1400));
+    try {
+      const res = await fetch("http://localhost:8000/api/judges/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: fullCode }),
+      });
 
-    // Mock: code "JUDGE1" succeeds, anything else fails
-    if (fullCode === "JUDGE1") {
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || data.errors?.code?.[0] || "Invalid access code.");
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       setStatus("success");
-    } else {
+      setTimeout(() => { window.location.href = "/judge/dashboard"; }, 1000);
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMessage("Invalid code. Please check with the event coordinator.");
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setCode(Array(CODE_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     }

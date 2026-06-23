@@ -30,4 +30,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function pageants()
+    {
+        return $this->belongsToMany(Pageant::class, 'judge_pageant', 'user_id', 'pageant_id');
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pageant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +15,7 @@ class JudgeController extends Controller
     {
         $judges = User::where('role', 'judge')
             ->where('organization_name', $request->user()->organization_name)
+            ->with('pageants:id,name')
             ->orderBy('created_at', 'desc')
             ->get(['id', 'name', 'judge_code', 'created_at']);
 
@@ -24,7 +26,21 @@ class JudgeController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'pageant_ids' => 'required|array',
+            'pageant_ids.*' => 'exists:pageants,id',
         ]);
+
+        $orgName = $request->user()->organization_name;
+
+        $pageants = Pageant::whereIn('id', $request->pageant_ids)->get();
+        if ($pageants->count() !== count($request->pageant_ids)) {
+            return response()->json(['message' => 'One or more pageants not found.'], 404);
+        }
+        foreach ($pageants as $pageant) {
+            if ($pageant->organization_name !== $orgName) {
+                return response()->json(['message' => 'Pageant does not belong to your organization.'], 403);
+            }
+        }
 
         $code = $this->generateJudgeCode();
         $email = 'judge-' . Str::random(10) . '@pageant.local';
@@ -34,9 +50,11 @@ class JudgeController extends Controller
             'email' => $email,
             'password' => Hash::make($code),
             'role' => 'judge',
-            'organization_name' => $request->user()->organization_name,
+            'organization_name' => $orgName,
             'judge_code' => $code,
         ]);
+
+        $user->pageants()->attach($request->pageant_ids);
 
         return response()->json([
             'judge' => [
@@ -50,17 +68,16 @@ class JudgeController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
             'code' => 'required|string',
         ]);
 
-        $user = User::where('name', $request->name)
+        $user = User::where('judge_code', $request->code)
             ->where('role', 'judge')
             ->first();
 
         if (!$user || !Hash::check($request->code, $user->password)) {
             throw ValidationException::withMessages([
-                'code' => ['Invalid judge name or code.'],
+                'code' => ['Invalid access code.'],
             ]);
         }
 
@@ -72,11 +89,20 @@ class JudgeController extends Controller
         ]);
     }
 
+    public function destroy($id)
+    {
+        $user = User::where('role', 'judge')->findOrFail($id);
+        $user->pageants()->detach();
+        $user->delete();
+
+        return response()->json(['message' => 'Judge removed.']);
+    }
+
     private function generateJudgeCode(): string
     {
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@:';
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $code = '';
-        for ($i = 0; $i < 16; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $code .= $chars[random_int(0, strlen($chars) - 1)];
         }
         return $code;

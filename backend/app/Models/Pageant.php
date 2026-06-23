@@ -20,4 +20,9 @@ class Pageant extends Model
     {
         return $this->belongsToMany(Candidate::class, 'pageant_candidate');
     }
+
+    public function judges()
+    {
+        return $this->belongsToMany(User::class, 'judge_pageant', 'pageant_id', 'user_id');
+    }
 }
