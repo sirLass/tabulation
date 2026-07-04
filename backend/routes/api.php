@@ -16,6 +16,7 @@ Route::get('/pageants/{pageant}', [PageantController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pageants', [PageantController::class, 'index']);
     Route::post('/pageants', [PageantController::class, 'store']);
+    Route::put('/pageants/{pageant}', [PageantController::class, 'update']);
 
     Route::get('/candidates', [CandidateController::class, 'index']);
     Route::post('/candidates', [CandidateController::class, 'store']);

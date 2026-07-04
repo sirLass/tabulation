@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['user_id', 'name', 'organization_name', 'country', 'province', 'city', 'barangay', 'zip', 'date'])]
+#[Fillable(['user_id', 'name', 'organization_name', 'country', 'province', 'city', 'barangay', 'zip', 'date', 'status'])]
 class Pageant extends Model
 {
     protected function casts(): array
