@@ -27,7 +27,7 @@ export default function HeroSection() {
         </h1>
         
         <p className="font-body text-gold-shimmer/80 text-lg md:text-xl max-w-2xl mt-6 leading-relaxed animate-fade-in-up-delay-2">
-          An elite digital ecosystem designed for prestigious international pageants. Empowering organizers, judges, and contestants with precision scoring and seamless management.
+           An elite digital ecosystem designed for prestigious international pageants. Empowering organizers and contestants with precision scoring and seamless management.
         </p>
 
         {/* Call to Actions */}

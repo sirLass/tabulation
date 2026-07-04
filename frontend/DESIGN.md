@@ -158,7 +158,7 @@ Cards use the Cream background with a 1px border in a slightly darker cream or g
 Text fields are minimal: a single bottom border (1px) in Deep Purple or Gold. Labels sit above the line in Montserrat Caps. Focus states animate the bottom border to a 2px thickness with a subtle golden outer glow.
 
 ### Chips & Tags
-Used for categories like "Winner," "Finalist," or "Judge." These are always rectangular, using a Deep Purple background with Gold text to signify high status.
+Used for categories like "Winner" or "Finalist." These are always rectangular, using a Deep Purple background with Gold text to signify high status.
 
 ### Progress Indicators
 Step indicators for application forms or scoring should be thin, elegant lines. Completed steps are marked by a small "diamond" shape in Gold, rather than a standard circle.

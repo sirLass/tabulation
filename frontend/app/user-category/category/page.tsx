@@ -6,7 +6,7 @@ export default function UserCategory() {
   const categories = [
     {
       title: "Event Organizer",
-      description: "Establish competitions, coordinate VIP judging panels, manage contestant profiles, and choreograph live pageantry events.",
+      description: "Establish competitions, coordinate VIP scoring panels, manage contestant profiles, and choreograph live pageantry events.",
       link: "/organizer/auth-organizer",
       badge: "Management Portal",
     },
@@ -15,12 +15,6 @@ export default function UserCategory() {
       description: "Follow prestigious competitions, view schedules, vote for your favorite delegates, and cheer them on to the crown.",
       link: "/user-category/pageant",
       badge: "Public Access",
-    },
-    {
-      title: "Judge",
-      description: "Access your assigned judging panel, evaluate candidates, and submit scores securely using your unique access code.",
-      link: "/judge/auth",
-      badge: "Judging Panel",
     },
   ];
 
@@ -51,7 +45,7 @@ export default function UserCategory() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left max-w-4xl mx-auto">
           {categories.map((cat, idx) => (
             <a
               key={idx}

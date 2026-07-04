@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToastProvider, useToast } from "./toast";
 
-type Section = "overview" | "pageants" | "candidates" | "judge";
+type Section = "overview" | "pageants" | "candidates";
 
 interface User {
     name: string;
@@ -23,14 +23,14 @@ const navItems: { key: Section; label: string; icon: string }[] = [
     { key: "overview",   label: "Overview",    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
     { key: "pageants",   label: "Pageants",    icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
     { key: "candidates", label: "Candidates",  icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-    { key: "judge",      label: "Judge",       icon: "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" },
+
 ];
 
 const sectionTitles: Record<Section, { title: string; subtitle: string }> = {
     overview:   { title: "Overview",    subtitle: "Here's what's happening with your account." },
     pageants:   { title: "Pageants",    subtitle: "Create and manage your pageant events." },
     candidates: { title: "Candidates",  subtitle: "Add and manage candidates for your pageants." },
-    judge:      { title: "Judge",       subtitle: "Assign judges to evaluate your pageants." },
+
 };
 
 function SvgIcon({ d, className = "w-4 h-4" }: { d: string; className?: string }) {
@@ -150,7 +150,7 @@ function OrganizerDashboardInner() {
                     {activeSection === "overview"   && <OverviewSection user={user} />}
                     {activeSection === "pageants"   && <PageantsSection user={user} />}
                     {activeSection === "candidates" && <CandidatesSection />}
-                    {activeSection === "judge"      && <JudgeSection />}
+
                 </div>
             </main>
 
@@ -216,18 +216,13 @@ function OverviewSection({ user }: { user: User }) {
             icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
             subtext: "Registration phase not started",
         },
-        {
-            label: "Judges Assigned", value: "0",
-            status: "pending" as const,
-            icon: "M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3",
-            subtext: "Awaiting panel invitations",
-        },
+
     ];
 
     return (
         <div className="max-w-5xl space-y-6">
             {/* Stat cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 {stats.map((s) => (
                     <div key={s.label} className="rounded-xl p-5 border border-white/[0.06]" style={{ background: '#13111f' }}>
                         <div className="flex items-start justify-between mb-4">
@@ -304,7 +299,7 @@ function OverviewSection({ user }: { user: User }) {
                             </button>
                         </div>
                         <p className="text-[9px] text-cream-warm/25 text-center leading-tight">
-                            Organization verified since June 2024. Your profile is public to judges and candidates.
+                            Organization verified since June 2024. Your profile is public to candidates.
                         </p>
                     </div>
                 </div>
@@ -775,298 +770,3 @@ function CandidatesSection() {
     );
 }
 
-/* ─────────────────────────────── Judge ─────────────────────────────── */
-
-interface Judge {
-    id: number;
-    name: string;
-    judge_code: string;
-    created_at: string;
-    pageants: { id: number; name: string }[];
-}
-
-function JudgeSection() {
-    const { toast } = useToast();
-    const [judges, setJudges] = useState<Judge[]>([]);
-    const [pageants, setPageants] = useState<Pageant[]>([]);
-    const [showModal, setShowModal] = useState(false);
-    const [result, setResult] = useState<{ name: string; code: string } | null>(null);
-    const [name, setName] = useState("");
-    const [selectedPageants, setSelectedPageants] = useState<number[]>([]);
-    const [submitting, setSubmitting] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [viewingJudge, setViewingJudge] = useState<Judge | null>(null);
-    const [confirmDelete, setConfirmDelete] = useState<Judge | null>(null);
-
-    const fetchJudges = async () => {
-        const token = localStorage.getItem("token");
-        try {
-            const res = await fetch("http://localhost:8000/api/judges", { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) setJudges(await res.json());
-        } catch { /* ignore */ } finally { setLoading(false); }
-    };
-
-    const fetchPageants = async () => {
-        const token = localStorage.getItem("token");
-        try {
-            const res = await fetch("http://localhost:8000/api/pageants", { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) {
-                const data = await res.json();
-                setPageants(data.data ?? data);
-            }
-        } catch { /* ignore */ }
-    };
-
-    useEffect(() => { fetchJudges(); fetchPageants(); }, []);
-
-    const togglePageant = (id: number) => {
-        setSelectedPageants((prev) =>
-            prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-        );
-    };
-
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (selectedPageants.length === 0) {
-            toast("Please select at least one pageant.", "error");
-            return;
-        }
-        setSubmitting(true);
-        const token = localStorage.getItem("token");
-        try {
-            const res = await fetch("http://localhost:8000/api/judges", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ name, pageant_ids: selectedPageants }),
-            });
-            if (!res.ok) { const d = await res.json(); throw new Error(d.message || "Failed to create judge"); }
-            const data = await res.json();
-            setResult(data.judge);
-            setName("");
-            setSelectedPageants([]);
-            await fetchJudges();
-        } catch (err: unknown) {
-            toast(err instanceof Error ? err.message : "Something went wrong", "error");
-        } finally { setSubmitting(false); }
-    };
-
-    const handleRemove = async (judge: Judge) => {
-        const token = localStorage.getItem("token");
-        try {
-            const res = await fetch(`http://localhost:8000/api/judges/${judge.id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) throw new Error("Failed to remove judge");
-            toast("Judge removed successfully!");
-            setConfirmDelete(null);
-            await fetchJudges();
-        } catch { toast("Something went wrong", "error"); }
-    };
-
-    const closeResult = () => setResult(null);
-
-    return (
-        <>
-            <div className="max-w-5xl space-y-5">
-                <div className="flex items-center justify-end">
-                    <button onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
-                        <SvgIcon d="M12 4v16m8-8H4" className="w-3.5 h-3.5" /> Assign Judge
-                    </button>
-                </div>
-                {loading ? (
-                    <div className="rounded-xl border border-white/[0.06] p-6 space-y-4" style={{ background: '#13111f' }}>
-                        {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-4 animate-pulse">
-                                <div className="h-4 bg-white/10 rounded w-1/3" />
-                                <div className="h-4 bg-white/10 rounded w-1/4" />
-                            </div>
-                        ))}
-                    </div>
-                ) : judges.length === 0 ? (
-                    <div className="rounded-xl border border-white/[0.06] p-10 text-center" style={{ background: '#13111f' }}>
-                        <SvgIcon d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" className="w-8 h-8 text-cream-warm/10 mx-auto mb-3" />
-                        <p className="text-sm text-cream-warm/30">No judges assigned yet.</p>
-                    </div>
-                ) : (
-                    <div className="rounded-xl border border-white/[0.06] overflow-hidden" style={{ background: '#13111f' }}>
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-white/[0.06] text-left text-cream-warm/30 text-[10px] uppercase tracking-wider">
-                                    <th className="px-5 py-3 font-semibold">Name</th>
-                                    <th className="px-5 py-3 font-semibold">Account Code</th>
-                                    <th className="px-5 py-3 font-semibold">Created</th>
-                                    <th className="px-5 py-3 font-semibold text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/[0.04]">
-                                {judges.map((j) => (
-                                    <tr key={j.id} className="hover:bg-white/[0.02] transition">
-                                        <td className="px-5 py-3.5 text-cream-warm font-medium">{j.name}</td>
-                                        <td className="px-5 py-3.5">
-                                            <span className="font-mono text-xs tracking-wider text-gold bg-gold/10 px-2.5 py-1 rounded-md border border-gold/20 select-all">{j.judge_code}</span>
-                                        </td>
-                                        <td className="px-5 py-3.5 text-cream-warm/40">{new Date(j.created_at).toLocaleDateString()}</td>
-                                        <td className="px-5 py-3.5 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <button onClick={() => setViewingJudge(j)}
-                                                    className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-gold/25 text-gold rounded-md hover:bg-gold/10 transition">
-                                                    View
-                                                </button>
-                                                <button onClick={() => setConfirmDelete(j)}
-                                                    className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider border border-red-400/25 text-red-400 rounded-md hover:bg-red-400/10 transition">
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-
-            {/* Create Judge Modal */}
-            {showModal && !result && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl" style={{ background: '#100e1a' }}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-display text-xl font-bold text-cream-warm">Assign Judge</h3>
-                            <button onClick={() => setShowModal(false)} className="text-cream-warm/30 hover:text-cream-warm text-lg transition">✕</button>
-                        </div>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            <div>
-                                <label className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 block mb-1.5 font-semibold">Full Name of Judge</label>
-                                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe"
-                                    className="w-full bg-[#0d0b14] border border-white/[0.08] text-cream-warm px-4 py-2.5 rounded-md focus:outline-none focus:border-gold/50 text-sm placeholder-cream-warm/20" required />
-                            </div>
-                            <div>
-                                <label className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 block mb-1.5 font-semibold">Assign to Pageants</label>
-                                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                                    {pageants.length === 0 ? (
-                                        <p className="text-sm text-cream-warm/30">No pageants available.</p>
-                                    ) : (
-                                        pageants.map((p) => (
-                                            <label key={p.id}
-                                                className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition text-sm ${selectedPageants.includes(p.id) ? 'bg-gold/10 border border-gold/25' : 'bg-white/[0.03] border border-transparent hover:bg-white/[0.06]'}`}>
-                                                <input type="checkbox" checked={selectedPageants.includes(p.id)}
-                                                    onChange={() => togglePageant(p.id)}
-                                                    className="accent-gold w-4 h-4" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-cream-warm font-medium truncate">{p.name}</p>
-                                                    <p className="text-cream-warm/30 text-[10px]">{p.city}, {p.province} &middot; {new Date(p.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-                                                </div>
-                                            </label>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-                            <button type="submit" disabled={submitting || pageants.length === 0}
-                                className="w-full mt-2 px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition disabled:opacity-50">
-                                {submitting ? "Generating..." : "Generate Code"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Generated Code Result */}
-            {result && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl text-center" style={{ background: '#100e1a' }}>
-                        <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
-                            <SvgIcon d="M5 13l4 4L19 7" className="w-6 h-6 text-emerald-400" />
-                        </div>
-                        <h3 className="font-display text-xl font-bold text-cream-warm mb-1">Judge Created</h3>
-                        <p className="text-sm text-cream-warm/50 mb-6">
-                            Share this code with <span className="text-cream-warm font-semibold">{result.name}</span>
-                        </p>
-                        <div className="bg-[#0d0b14] border border-white/[0.08] rounded-lg px-5 py-4 mb-6">
-                            <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/30 mb-2 font-semibold">Login Code</p>
-                            <button
-                                onClick={() => { navigator.clipboard.writeText(result.code); toast("Code copied!"); }}
-                                className="w-full group relative flex items-center justify-center gap-3"
-                            >
-                                <span className="font-mono text-xl tracking-widest text-gold font-bold">{result.code}</span>
-                                <span className="text-[10px] text-cream-warm/30 group-hover:text-cream-warm/60 transition shrink-0">
-                                    <SvgIcon d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" className="w-4 h-4" />
-                                </span>
-                            </button>
-                        </div>
-                        <button onClick={() => { setShowModal(false); setResult(null); }}
-                            className="w-full px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-gold text-[#0d0b14] rounded-md hover:bg-gold/90 transition">
-                            Done
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* View Judge Modal */}
-            {viewingJudge && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-md w-full shadow-2xl" style={{ background: '#100e1a' }}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-display text-xl font-bold text-cream-warm">Judge Details</h3>
-                            <button onClick={() => setViewingJudge(null)} className="text-cream-warm/30 hover:text-cream-warm text-lg transition">✕</button>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1 font-semibold">Name</p>
-                                <p className="text-cream-warm font-medium">{viewingJudge.name}</p>
-                            </div>
-                            <div>
-                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1 font-semibold">Access Code</p>
-                                <span className="font-mono text-sm tracking-wider text-gold bg-gold/10 px-2.5 py-1 rounded-md border border-gold/20 select-all">{viewingJudge.judge_code}</span>
-                            </div>
-                            <div>
-                                <p className="text-[9px] uppercase tracking-[0.18em] text-cream-warm/40 mb-1.5 font-semibold">Assigned Pageants</p>
-                                {viewingJudge.pageants.length === 0 ? (
-                                    <p className="text-sm text-cream-warm/30">No pageants assigned.</p>
-                                ) : (
-                                    <div className="space-y-1.5">
-                                        {viewingJudge.pageants.map((p) => (
-                                            <div key={p.id} className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] rounded-md">
-                                                <SvgIcon d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" className="w-3 h-3 text-gold shrink-0" />
-                                                <span className="text-sm text-cream-warm">{p.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <p className="text-[10px] text-cream-warm/20">
-                                Created {new Date(viewingJudge.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Confirm Remove Modal */}
-            {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                    <div className="border border-white/[0.08] rounded-xl p-8 max-w-sm w-full shadow-2xl text-center" style={{ background: '#100e1a' }}>
-                        <div className="w-14 h-14 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
-                            <SvgIcon d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-6 h-6 text-red-400" />
-                        </div>
-                        <h3 className="font-display text-xl font-bold text-cream-warm mb-2">Remove Judge</h3>
-                        <p className="text-sm text-cream-warm/50 mb-6">
-                            Are you sure you want to remove <span className="text-cream-warm font-semibold">{confirmDelete.name}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button onClick={() => setConfirmDelete(null)}
-                                className="flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider border border-white/[0.1] text-cream-warm/40 rounded-md hover:bg-white/5 transition">
-                                Cancel
-                            </button>
-                            <button onClick={() => handleRemove(confirmDelete)}
-                                className="flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider bg-red-500 text-white rounded-md hover:bg-red-600 transition">
-                                Remove
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
-}

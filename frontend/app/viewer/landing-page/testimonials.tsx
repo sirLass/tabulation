@@ -46,7 +46,7 @@ export default function Testimonials() {
             <div>
               <span className="font-display text-6xl text-gold/25 leading-none block -mt-2">“</span>
               <p className="font-body text-cream-dim text-base leading-relaxed -mt-2 italic">
-                An unparalleled experience for both judges and contestants. The digital ballots are clean, intuitive, and secure.
+                An unparalleled experience for both organizers and contestants. The digital ballots are clean, intuitive, and secure.
               </p>
             </div>
             <div className="mt-8 pt-6 border-t border-gold-shimmer/10">

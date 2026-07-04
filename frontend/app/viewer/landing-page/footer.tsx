@@ -34,11 +34,6 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="font-body text-sm text-cream-dim/70 hover:text-gold transition-colors duration-200">
-                  Judge Portal
-                </a>
-              </li>
-              <li>
-                <a href="#" className="font-body text-sm text-cream-dim/70 hover:text-gold transition-colors duration-200">
                   Organizer Dashboard
                 </a>
               </li>

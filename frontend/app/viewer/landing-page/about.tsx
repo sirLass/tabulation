@@ -22,7 +22,7 @@ export default function About() {
           {/* Right Column: Features Grid */}
           <div className="animate-fade-in-up-delay-1">
             <div className="border border-outline-variant bg-cream p-8 md:p-10 relative border-b-2 border-b-gold shadow-gold">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-10">
                 
                 {/* Feature 1 */}
                 <div className="flex flex-col items-start">
@@ -43,17 +43,6 @@ export default function About() {
                   </h3>
                   <p className="font-body text-xs text-on-surface-variant mt-2 leading-relaxed">
                     End-to-end competition choreography, schedules, contestant profiles, and ticketing control.
-                  </p>
-                </div>
-
-                {/* Feature 3 */}
-                <div className="flex flex-col items-start">
-                  <span className="text-gold text-2xl leading-none">◇</span>
-                  <h3 className="font-display text-lg font-semibold text-on-surface mt-3">
-                    Judge Portal
-                  </h3>
-                  <p className="font-body text-xs text-on-surface-variant mt-2 leading-relaxed">
-                    An intuitive, distraction-free scoring UI tailored specifically for VIP panels and adjudicators.
                   </p>
                 </div>
 

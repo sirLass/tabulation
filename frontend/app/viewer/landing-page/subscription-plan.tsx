@@ -13,7 +13,7 @@ const plans = [
       "Everything you need to launch and manage your first pageant with confidence.",
     features: [
       "Up to 50 contestants",
-      "3 judging categories",
+      "3 scoring categories",
       "Real-time scoring dashboard",
       "Basic analytics & reports",
       "Email support",
@@ -31,9 +31,9 @@ const plans = [
       "The complete toolkit for serious organizers running multi-round competitions.",
     features: [
       "Up to 200 contestants",
-      "Unlimited judging categories",
+      "Unlimited scoring categories",
       "Advanced scoring & tabulation",
-      "Judge management portal",
+      "Multi-round scoring system",
       "Custom branding",
       "Priority support",
       "Detailed analytics suite",
@@ -51,7 +51,7 @@ const plans = [
       "White-glove infrastructure for international pageants demanding precision at scale.",
     features: [
       "Unlimited contestants",
-      "Unlimited judges",
+      "Unlimited scoring panels",
       "Live broadcast scoring overlay",
       "Multi-stage tournament bracket",
       "Dedicated account manager",
