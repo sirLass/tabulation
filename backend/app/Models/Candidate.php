@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['user_id', 'first_name', 'last_name', 'email'])]
+#[Fillable(['user_id', 'candidate_number', 'first_name', 'last_name', 'email', 'gender', 'primary_image', 'hover_image'])]
 class Candidate extends Model
 {
     public function pageants()
